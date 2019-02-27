@@ -25,8 +25,8 @@ SECRET_KEY = '(%*qzx$u#m%oim%lb86a2!_%moit26xf516a)w3gcz2re+7*q$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = []
+LOGIN_URL = '/membership'
 
 # Application definition
 
@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'website.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'form5',
+        'NAME': 'Form',
         'USER': 'arpit',
         'PASSWORD': 'arpitarpit',
         'HOST': 'localhost',

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Responsive Signup/Login form</title>
+  <title>Signup/Login</title>
   {% load static %}
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700|Raleway:300,600" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -40,7 +40,7 @@
          <div class="col-sm-6 form">
 
             <!-- Login Form -->
-            <div class="login form-peice switched">
+            <div class="signup form-peice">
                <form class="login-form" action="login/" method="post">
                  {% csrf_token %}
                   <div class="form-group">
@@ -62,7 +62,7 @@
 
 
             <!-- Signup Form -->
-            <div class="signup form-peice">
+            <div class="login form-peice switched">
                <form class="signup-form" action="register/" method="post">
                {% csrf_token %}
                   <div class="form-group">

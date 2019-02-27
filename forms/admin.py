@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import FormSubmit , Booking , Room,UserProfile
+# from .models import FormSubmit , Booking
+from .models import Room, UserProfile , FeedbackSubmit
+from members.models import FormSubmit as FormSubmitmembers
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin
 from  .models import UserProfile
@@ -17,39 +19,41 @@ from django.core.mail import EmailMessage
 admin.site.site_header = "MDP ADMIN PAGE";
 admin.site.site_title = "ADMISTRATOR";
 
-class AllEntryAdmin(admin.ModelAdmin):
-	list_display = ("id", "name", "email","arrive","depart","reference_name","reference_email")
-class AllEntryAdmin1(admin.ModelAdmin):
-	list_display = ( "reference_name","reference_email")
+# class AllEntryAdmin(admin.ModelAdmin):
+# 	list_display = ("id", "name", "email","arrive","depart","reference_name","reference_email")
+# class AllEntryAdmin1(admin.ModelAdmin):
+# 	list_display = ( "reference_name","reference_email")
 class RoomEntry(admin.ModelAdmin):
 	list_display = ( "roomID", "room_type", "status")
-class BookingEntry(admin.ModelAdmin):
-	list_display = ( "bookingID", "user", "roomID", "name", "arrive", "depart")
+# class BookingEntry(admin.ModelAdmin):
+# 	list_display = ( "bookingID", "user", "roomID", "name", "arrive", "depart")
 class UserProfileEntry(admin.ModelAdmin):
-	list_display = ("user", "verified", "booking_mail_sent", "arrive", "depart", "street", "city", "reference_email")
+	list_display = ("user", "verified", "booking_mail_sent", "street", "city", "reference_email")
+class FeedBackEntry(admin.ModelAdmin):
+    list_display = ("name","subject","message")
 
-admin.site.register(FormSubmit,AllEntryAdmin)
-admin.site.register(Room,RoomEntry)
-admin.site.register(Booking,BookingEntry)
-admin.site.register(UserProfile,UserProfileEntry)
+#
+# class ProfileInline(admin.StackedInline):
+# 	model = UserProfile
+# 	can_delete = False
+# 	verbose_name_plural = 'Profile'
+# 	fk_name = 'user'
+# 	ordering = ('-id',)
 
-class ProfileInline(admin.StackedInline):
-	model = UserProfile
-	can_delete = False
-	verbose_name_plural = 'Profile'
-	fk_name = 'user'
-	ordering = ('-id',)
+# class BookinInLine(admin.StackedInline):
+# 	model = Booking
+# 	can_delete = False
 
-class BookinInLine(admin.StackedInline):
-	model = Booking
+class FormSubmitmembersInLine(admin.StackedInline):
+	model = FormSubmitmembers
 	can_delete = False
 
 class UserProfileAdmin(UserAdmin):
-	inlines = [ ProfileInline, BookinInLine,]
+	# inlines = [ ProfileInline,FormSubmitmembersInLine]
 	ordering = ('-id', )
-	fieldsets = (
-			(None, {'fields': ('first_name','email', 'password')}),
-	)
+	# fieldsets = (
+	# 		(None, {'fields': ('first_name','email', 'password')}),
+	# )
 
 	def reference_verified(self, obj):
 		try:
@@ -76,12 +80,12 @@ class UserProfileAdmin(UserAdmin):
 			return obj.userprofile.is_member
 		except UserProfile.DoesNotExist:
 			return ''
-	def room(self, obj):
-		try:
-			return obj.booking_set.get().roomID
-		except Booking.DoesNotExist:
-			return ''
-	list_display =  ('first_name','id','email','reference_verified','admin_verified','verified','room','bill_genration',)
+	# def room(self, obj):
+	# 	try:
+	# 		return obj.booking_set.get().roomID
+	# 	except Booking.DoesNotExist:
+	# 		return ''
+	list_display =  ('first_name','id','email','reference_verified','admin_verified','verified','account_actions',)
 	list_filter =('userprofile__is_member',)
 
 
@@ -89,28 +93,27 @@ class UserProfileAdmin(UserAdmin):
 		urls = super().get_urls()
 		custom_urls = [
 			url(
-				r'^(?P<account_id>.+)/genrate_bill/$',
+				r'^(?P<account_id>.+)/deposit/$',
 				self.admin_site.admin_view(self.process_genrate),
-				name='genrate-bill',
+				name='account-deposit',
 			),
 			url(
-				r'^(?P<account_id>.+)/send_bill/$',
+				r'^(?P<account_id>.+)/withdraw/$',
 				self.admin_site.admin_view(self.process_send),
-				name='send-bill',
+				name='account-withdraw',
 			),
-
 		]
 		return custom_urls + urls
-	def bill_genration(self, obj):
+	def account_actions(self, obj):
 		return format_html(
 			'<a class="button" href="{}">Generate Bill</a>&nbsp;'
 			'<a class="button" href="{}">Send Bill</a>&nbsp;',
 
-			reverse('admin:genrate-bill', args=[obj.pk]),
-			reverse('admin:send-bill', args=[obj.pk]),
+			reverse('admin:account-deposit', args=[obj.pk]),
+			reverse('admin:account-withdraw', args=[obj.pk]),
 
 		)
-	bill_genration.short_description = 'Bill'
+	account_actions.short_description = 'Bill'
 	def process_genrate(self, request, account_id, *args, **kwargs):
 		html_template = get_template('bill.html')
 		a=settings.STATICFILES_DIRS
@@ -121,7 +124,7 @@ class UserProfileAdmin(UserAdmin):
 		rendered_html = html_template.render(({'user': user,'profile':profile,'booking':booking,})).encode(encoding="UTF-8")
 		pdf_file = HTML(string=rendered_html,base_url=request.build_absolute_uri()).write_pdf(stylesheets=[CSS(b +'/css/bill.css')])
 		response = HttpResponse(pdf_file, content_type='application/pdf')
-		response['Content-Disposition'] =  'filename="home_page.pdf"'
+		response['Content-Disposition'] = 'filename="home_page.pdf"'
 		return response
 
 	def process_send(self, request, account_id, *args, **kwargs):
@@ -146,5 +149,10 @@ class UserProfileAdmin(UserAdmin):
 
 
 admin.site.unregister(User)
-admin.site.register(User,UserProfileAdmin)
 admin.site.unregister(Group)
+admin.site.register(User,UserProfileAdmin)
+# admin.site.register(FormSubmit,AllEntryAdmin)
+admin.site.register(Room,RoomEntry)
+# admin.site.register(Booking,BookingEntry)
+admin.site.register(FeedbackSubmit,FeedBackEntry)
+admin.site.register(UserProfile,UserProfileEntry)
